@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/app/components/ui/button";
-import { db } from "@/app/lib/prisma";
 import { Barbershop } from "@prisma/client";
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react";
 import Image from "next/image";
@@ -11,7 +10,7 @@ interface BarbershopInfoProps {
   barbershop: Barbershop
 }
 
-export async function BarbershopInfo({ barbershop }: BarbershopInfoProps) {
+export function BarbershopInfo({ barbershop }: BarbershopInfoProps) {
   const router = useRouter()
 
   function handleBackClick() {
