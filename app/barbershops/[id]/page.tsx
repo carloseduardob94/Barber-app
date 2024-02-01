@@ -2,6 +2,7 @@
 import { db } from "@/app/lib/prisma"
 import { BarbershopInfo } from "./components/Barbershop-info"
 import { ServiceItem } from "./components/Service-item"
+import { Button } from "@/app/components/ui/button"
 
 interface BarbershopDetailsPageProps {
   params: {
@@ -30,6 +31,8 @@ export default async function BarbershopDetailsPage({ params }: BarbershopDetail
   return (
     <div>
       <BarbershopInfo barbershop={barbershop} />
+
+      <Button className="mt-5 ml-5" variant="default">Serviços</Button>
 
       <div className="flex flex-col gap-4 px-5 py-6">
         {barbershop.services.map(service => (
