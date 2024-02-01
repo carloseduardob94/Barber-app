@@ -16,7 +16,7 @@ export function BarbershopInfo({ barbershop }: BarbershopInfoProps) {
   const router = useRouter()
 
   function handleBackClick() {
-    router.back()
+    router.replace("/")
   }
 
   return (
