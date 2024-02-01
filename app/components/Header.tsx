@@ -1,9 +1,14 @@
+"use client"
 import Image from "next/image";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { MenuIcon } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export function Header() {
+  async function handleLoginClibk() {
+    await signIn()
+  }
   return (
     <Card>
       <CardContent className="px-5 py-5 justify-between flex flex-row items-center">
