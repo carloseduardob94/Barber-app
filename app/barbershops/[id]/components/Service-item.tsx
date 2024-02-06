@@ -3,17 +3,18 @@ import { Button } from "@/app/components/ui/button"
 import { Calendar } from "@/app/components/ui/calendar"
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/app/components/ui/sheet"
-import { Barbershop, Service } from "@prisma/client"
+import { Barbershop, Booking, Service } from "@prisma/client"
 import { ptBR } from "date-fns/locale"
 import { signIn, useSession } from "next-auth/react"
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { generateDayTimeList } from "../helpers/hours"
 import { format, setHours, setMinutes } from "date-fns"
 import { saveBooking } from "../actions/save-booking"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { getDayBookings } from "../actions/get-day-bookings"
 
 
 interface ServiceItemProps {
@@ -30,6 +31,21 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
   const [hour, setHour] = useState<String | undefined>()
   const [submitIsLoading, setSubmitIsLoading] = useState(false)
   const [sheetIsOpen, setSheetIsOpen] = useState(false)
+  const [dayBookings, setDayBookings] = useState<Booking[]>([])
+
+  useEffect(() => {
+    if (!date) {
+      return
+    }
+
+    const refreshAvailableHours = async () => {
+      const _dayBookings = await getDayBookings(date)
+
+      setDayBookings(_dayBookings)
+    }
+
+    refreshAvailableHours()
+  }, [date])
 
   function handleDateClick(date: Date | undefined) {
     setDate(date)
@@ -92,8 +108,28 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
   }
 
   const timeList = useMemo(() => {
-    return date ? generateDayTimeList(date) : []
-  }, [date])
+    if (!date) {
+      return []
+    }
+
+    return generateDayTimeList(date).filter(timer => {
+      const timeHours = Number(timer.split(":")[0])
+      const timeMinutes = Number(timer.split(":")[1])
+
+      const booking = dayBookings.find(booking => {
+        const bookingHour = booking.date.getHours()
+        const bookingMinutes = booking.date.getMinutes()
+
+        return bookingHour === timeHours && bookingMinutes === timeMinutes
+      })
+
+      if (!booking) {
+        return true
+      }
+
+      return false
+    })
+  }, [date, dayBookings])
 
   return (
 
@@ -164,7 +200,7 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
 
                   {/* Mostrar lista de horários apenas se alguma data estiver selecionada */}
                   {date && (
-                    <div className="flex flex-wrap gap-2 justify-center py-6 px-3 border-t border-solid border-secondary">
+                    <div className="flex overflow-x-auto gap-2 justify-center py-6 px-3 border-t border-solid border-secondary [&::-webkit-scrollbar]:hidden">
                       {timeList.map(time => (
                         <Button onClick={() => handleHourClick(time)} variant={hour === time ? 'default' : 'outline'} className="min-w-[4rem] max-w-[4rem] rounded-full" key={time}>{time}</Button>
                       ))}
