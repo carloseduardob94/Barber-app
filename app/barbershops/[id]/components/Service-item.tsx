@@ -5,11 +5,13 @@ import { Card, CardContent } from "@/app/components/ui/card"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/app/components/ui/sheet"
 import { Barbershop, Service } from "@prisma/client"
 import { ptBR } from "date-fns/locale"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import Image from "next/image"
 import { useMemo, useState } from "react"
 import { generateDayTimeList } from "../helpers/hours"
-import { format } from "date-fns"
+import { format, setHours, setMinutes } from "date-fns"
+import { saveBooking } from "../actions/save-booking"
+import { Loader2 } from "lucide-react"
 
 interface ServiceItemProps {
   barbershop: Barbershop
@@ -18,8 +20,11 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceItemProps) {
+  const { data } = useSession()
+
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [hour, setHour] = useState<String | undefined>()
+  const [submitIsLoading, setSubmitIsLoading] = useState(false)
 
   function handleDateClick(date: Date | undefined) {
     setDate(date)
@@ -35,8 +40,34 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
     if (!isAuthenticated) {
       return signIn("google")
     }
+  }
 
-    //TODO: Abrir modal de agendamentos
+  async function handleBookingSubmit() {
+    setSubmitIsLoading(true)
+    try {
+
+      if (!hour || !date || !data?.user) {
+        return
+      }
+
+      const dateHour = Number(hour.split(":")[0])
+      const dateMinutes = Number(hour.split(":")[1])
+
+      const newDate = setMinutes(setHours(date, dateHour), dateMinutes)
+
+      await saveBooking({
+        barbershopId: barbershop.id,
+        serviceId: service.id,
+        date: newDate,
+        userId: (data.user as any).id,
+
+      })
+
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSubmitIsLoading(false)
+    }
   }
 
   const timeList = useMemo(() => {
@@ -153,9 +184,12 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
                     </Card>
                   </div>
                   <SheetFooter className="px-5">
-                    <Button disabled={
-                      hour && date ? false : true
-                    } >Confirmar reserva</Button>
+                    <Button onClick={handleBookingSubmit} disabled={!hour || !date || submitIsLoading}>
+                      {submitIsLoading === true && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Confirmar reserva
+                    </Button>
                   </SheetFooter>
                 </SheetContent>
               </Sheet>
