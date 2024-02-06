@@ -72,11 +72,10 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
       setDate(undefined)
       setHour(undefined)
 
-      toast("Reserva realizada com sucesso.", {
+      toast.success("Reserva realizada com sucesso.", {
         description: `Reserva realizada em ${format(newDate, "EEEE', 'dd 'de' MMMM", {
           locale: ptBR
         })}`,
-        className: "bg-green-500",
         action: {
           label: "Visualizar reserva",
           onClick: () => router.push("/bookings")
@@ -84,6 +83,8 @@ export function ServiceItem({ service, isAuthenticated, barbershop }: ServiceIte
       })
 
     } catch (err) {
+      toast.error("Não foi possível realizar a reserva.")
+
       console.error(err)
     } finally {
       setSubmitIsLoading(false)
